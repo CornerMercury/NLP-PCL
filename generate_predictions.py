@@ -29,7 +29,6 @@ test_df = pd.read_csv('./data/task4_test.tsv', sep='\t', header=None,
 
 dev_df = pd.merge(official_dev_split[['par_id']], main_df[['par_id', 'keyword', 'country', 'text']], on='par_id', how='inner')
 
-# FIX: Added .fillna('').astype(str) to the end of the text column to prevent the TypeError
 dev_df['text_with_meta'] = "Target: " + dev_df['keyword'].fillna('none') + " | Country: " + dev_df['country'].fillna('none') + " </s> " + dev_df['text'].fillna('').astype(str)
 test_df['text_with_meta'] = "Target: " + test_df['keyword'].fillna('none') + " | Country: " + test_df['country'].fillna('none') + " </s> " + test_df['text'].fillna('').astype(str)
 
@@ -39,7 +38,6 @@ def predict(texts):
     batch_size = 16
     
     for i in range(0, len(texts), batch_size):
-        # FIX: Explicitly cast every element to string just in case
         batch_texts = [str(text) for text in texts[i:i+batch_size].tolist()]
         
         inputs = tokenizer(batch_texts, padding=True, truncation=True, max_length=256, return_tensors="pt").to(device)
@@ -49,7 +47,6 @@ def predict(texts):
             
         probs = torch.softmax(outputs.logits, dim=-1)[:, 1].cpu().numpy()
         
-        # Apply the threshold
         batch_preds = (probs >= THRESHOLD).astype(int)
         predictions.extend(batch_preds)
         
